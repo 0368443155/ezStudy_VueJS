@@ -1,4 +1,3 @@
-﻿<!-- src/components/Pagination.vue -->
 <template>
   <div class="pagination-container" v-if="totalPages > 1">
     <button @click="changePage(currentPage - 1)" :disabled="currentPage === 1">

@@ -1,4 +1,3 @@
-<!-- src/components/StudentList.vue -->
 <template>
   <div>
     <div class="toolbar">
@@ -30,9 +29,7 @@
         <tr v-if="paginatedStudents.length === 0">
           <td colspan="5" style="text-align: center;">Không có dữ liệu học sinh phù hợp.</td>
         </tr>
-        <!-- Thay đổi: lặp qua paginatedStudents thay vì filteredStudents -->
         <tr v-for="(student, index) in paginatedStudents" :key="student.id">
-          <!-- Thay đổi: tính toán chỉ số # dựa trên trang hiện tại -->
           <td>{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
           <td>{{ student.name }}</td>
           <td>{{ tinhTuoi(student.dob) }}</td>
@@ -54,7 +51,7 @@
 
 <script setup>
   import { ref, computed, watch } from 'vue';
-  import Pagination from './Pagination.vue'; // <-- Import component mới
+  import Pagination from './Pagination.vue';
 
   const props = defineProps({
     students: Array,
@@ -63,9 +60,8 @@
 
   defineEmits(['add', 'edit', 'delete']);
 
-  // --- Thêm state cho phân trang ---
   const currentPage = ref(1);
-  const itemsPerPage = ref(5); // Hiển thị 5 học sinh mỗi trang
+  const itemsPerPage = ref(5); 
 
   const selectedClass = ref(null);
 
@@ -76,7 +72,6 @@
     return props.students.filter(s => s.classId === selectedClass.value);
   });
 
-  // --- Thêm các computed property cho phân trang ---
   const totalPages = computed(() => {
     return Math.ceil(filteredStudents.value.length / itemsPerPage.value);
   });
@@ -92,7 +87,6 @@
     currentPage.value = page;
   }
 
-  // Watcher: Nếu người dùng lọc danh sách, quay về trang 1
   watch(selectedClass, () => {
     currentPage.value = 1;
   });

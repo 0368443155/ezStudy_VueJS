@@ -1,4 +1,3 @@
-<!-- src/components/ClassForm.vue -->
 <template>
   <div class="form-container">
     <h2>{{ formTitle }}</h2>
@@ -40,7 +39,6 @@ const form = ref({
   parentId: null
 });
 
-// Lọc ra các lớp có thể làm cha (các khối lớp)
 const parentClasses = computed(() => {
   return props.classes.filter(c => c.parentId === null && c.id !== form.value.id);
 });
@@ -49,13 +47,11 @@ const formTitle = computed(() => {
   return form.value.id ? 'CHỈNH SỬA LỚP' : 'THÊM LỚP';
 });
 
-// Theo dõi prop classToEdit, nếu có thì điền dữ liệu vào form
 watchEffect(() => {
   if (props.classToEdit) {
     form.value = { ...props.classToEdit };
   } else {
-    // Reset form
-    form.value = { id: null, name: '', parentId: null };
+=    form.value = { id: null, name: '', parentId: null };
   }
 });
 

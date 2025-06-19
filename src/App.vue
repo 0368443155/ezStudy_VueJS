@@ -1,4 +1,3 @@
-<!-- src/App.vue -->
 <template>
   <div class="container">
     <AppHeader :currentView="currentView" @change-view="changeView" />
@@ -22,7 +21,6 @@
   import StudentManagement from './components/StudentManagement.vue';
   import ClassManagement from './components/ClassManagement.vue';
 
-  // --- DỮ LIỆU MOCK ---
   const classes = ref([
     { id: 1, name: 'Khối 10', parentId: null },
     { id: 2, name: 'Lớp 10A1', parentId: 1 },
@@ -40,48 +38,42 @@
     { id: 103, name: 'Lê Văn C', dob: '2007-01-20', classId: 5 },
     { id: 104, name: 'Phạm Thị D', dob: '2006-03-30', classId: 8 },
   ]);
-  // --- KẾT THÚC DỮ LIỆU MOCK ---
 
-  const currentView = ref('students'); // 'students' hoặc 'classes'
+  const currentView = ref('students'); 
 
   function changeView(view) {
     currentView.value = view;
   }
 
-  // --- LOGIC QUẢN LÝ LỚP ---
   function handleSaveClass(classData) {
-    if (classData.id) { // Update
+    if (classData.id) {
       const index = classes.value.findIndex(c => c.id === classData.id);
       if (index !== -1) {
         classes.value[index] = classData;
       }
-    } else { // Create
+    } else { 
       const newId = Math.max(0, ...classes.value.map(c => c.id)) + 1;
       classes.value.push({ ...classData, id: newId });
     }
   }
 
   function handleDeleteClass(classId) {
-    // Tìm các lớp con để xóa luôn
     const childrenIds = classes.value.filter(c => c.parentId === classId).map(c => c.id);
     const idsToDelete = [classId, ...childrenIds];
 
-    // Xóa lớp và các lớp con của nó
     classes.value = classes.value.filter(c => !idsToDelete.includes(c.id));
 
-    // Xóa luôn học sinh thuộc các lớp đó
     students.value = students.value.filter(s => !idsToDelete.includes(s.classId));
   }
 
 
-  // --- LOGIC QUẢN LÝ HỌC SINH ---
   function handleSaveStudent(studentData) {
-    if (studentData.id) { // Update
+    if (studentData.id) { 
       const index = students.value.findIndex(s => s.id === studentData.id);
       if (index !== -1) {
         students.value[index] = studentData;
       }
-    } else { // Create
+    } else { 
       const newId = Math.max(100, ...students.value.map(s => s.id)) + 1;
       students.value.push({ ...studentData, id: newId });
     }

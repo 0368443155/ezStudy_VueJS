@@ -1,4 +1,3 @@
-<!-- src/components/ClassList.vue -->
 <template>
   <div>
     <div class="toolbar">
@@ -18,9 +17,7 @@
         <tr v-if="paginatedClasses.length === 0">
           <td colspan="3" style="text-align: center;">Không có dữ liệu.</td>
         </tr>
-        <!-- Thay đổi: lặp qua paginatedClasses -->
         <tr v-for="(c, index) in paginatedClasses" :key="c.id">
-          <!-- Thay đổi: tính toán chỉ số # -->
           <td>{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
           <td>{{ c.prefixedName }}</td>
           <td class="actions">
@@ -31,7 +28,6 @@
       </tbody>
     </table>
 
-    <!-- Thêm component Pagination -->
     <Pagination :currentPage="currentPage"
                 :totalPages="totalPages"
                 @page-changed="onPageChange" />
@@ -40,7 +36,7 @@
 
 <script setup>
   import { computed, ref, watch } from 'vue';
-  import Pagination from './Pagination.vue'; // <-- Import component mới
+  import Pagination from './Pagination.vue';
 
   const props = defineProps({
     classes: {
@@ -51,11 +47,9 @@
 
   defineEmits(['add', 'edit', 'delete']);
 
-  // --- Thêm state cho phân trang ---
   const currentPage = ref(1);
-  const itemsPerPage = ref(5); // Hiển thị 5 lớp mỗi trang
+  const itemsPerPage = ref(5); 
 
-  // Tạo danh sách lớp có định dạng phân cấp (vd: ---Lớp 11A)
   const formattedClasses = computed(() => {
     const list = [];
     const classMap = {};
@@ -87,7 +81,6 @@
     return list;
   });
 
-  // --- Thêm các computed property cho phân trang ---
   const totalPages = computed(() => {
     return Math.ceil(formattedClasses.value.length / itemsPerPage.value);
   });
@@ -98,12 +91,10 @@
     return formattedClasses.value.slice(start, end);
   });
 
-  // --- Thêm hàm xử lý sự kiện từ Pagination component ---
   function onPageChange(page) {
     currentPage.value = page;
   }
 
-  // Watcher: Nếu danh sách lớp thay đổi, kiểm tra lại trang hiện tại
   watch(() => props.classes, () => {
     if (currentPage.value > totalPages.value && totalPages.value > 0) {
       currentPage.value = totalPages.value;

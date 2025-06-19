@@ -1,4 +1,3 @@
-<!-- src/components/ClassManagement.vue -->
 <template>
   <div>
     <ClassForm v-if="showForm"

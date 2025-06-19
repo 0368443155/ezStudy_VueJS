@@ -1,4 +1,3 @@
-<!-- src/components/StudentForm.vue -->
 <template>
   <div class="form-container">
     <h2>{{ formTitle }}</h2>
@@ -45,7 +44,6 @@
     classId: null
   });
 
-  // Chỉ cho phép chọn các lớp con, không phải khối
   const availableClasses = computed(() => {
     return props.classes.filter(c => c.parentId !== null);
   });
@@ -54,12 +52,10 @@
     return form.value.id ? 'CHỈNH SỬA HỌC SINH' : 'THÊM HỌC SINH';
   });
 
-  // Theo dõi prop studentToEdit, nếu có thì điền dữ liệu vào form
   watchEffect(() => {
     if (props.studentToEdit) {
       form.value = { ...props.studentToEdit };
     } else {
-      // Reset form
       form.value = { id: null, name: '', dob: '', classId: null };
     }
   });
