@@ -1,20 +1,21 @@
+<!-- src/components/StudentForm.vue -->
 <template>
   <div class="form-container">
     <h2>{{ formTitle }}</h2>
-    <form @submit.prevent="onSave">
+    <form @submit.prevent="handleSubmit">
       <div class="form-group">
         <label for="name">Họ và tên *</label>
-        <input type="text" id="name" v-model="localFormData.name" required>
+        <input id="name" type="text" v-model="form.name" required />
       </div>
       <div class="form-group">
         <label for="dob">Ngày sinh</label>
-        <input type="date" id="dob" v-model="localFormData.dob" required>
+        <input id="dob" type="date" v-model="form.dob" />
       </div>
       <div class="form-group">
         <label for="class">Lớp *</label>
-        <select id="class" v-model="localFormData.classId" required>
+        <select id="class" v-model="form.classId" required>
           <option :value="null" disabled>--- Chọn lớp ---</option>
-          <option v-for="c in classes" :key="c.id" :value="c.id">
+          <option v-for="c in availableClasses" :key="c.id" :value="c.id">
             {{ c.name }}
           </option>
         </select>
@@ -28,66 +29,42 @@
 </template>
 
 <script setup>
-  import { ref, computed, watch } from 'vue';
+  import { ref, computed, watchEffect } from 'vue';
 
   const props = defineProps({
-    initialFormData: { type: Object, required: true },
-    isEditMode: { type: Boolean, default: false },
-    classes: { type: Array, required: true }
+    studentToEdit: Object,
+    classes: Array
   });
 
   const emit = defineEmits(['save', 'cancel']);
 
-  //tạo bản sao để chỉnh sửa
-  const localFormData = ref({ ...props.initialFormData });
+  const form = ref({
+    id: null,
+    name: '',
+    dob: '',
+    classId: null
+  });
 
-  // theo dõi để cập nhật
-  watch(() => props.initialFormData, (newData) => {
-    localFormData.value = { ...newData };
-  }, { deep: true });
+  // Chỉ cho phép chọn các lớp con, không phải khối
+  const availableClasses = computed(() => {
+    return props.classes.filter(c => c.parentId !== null);
+  });
 
-  const formTitle = computed(() => props.isEditMode ? 'SỬA HỌC SINH' : 'THÊM HỌC SINH');
+  const formTitle = computed(() => {
+    return form.value.id ? 'CHỈNH SỬA HỌC SINH' : 'THÊM HỌC SINH';
+  });
 
-  const onSave = () => {
-    if (!localFormData.value.name || !localFormData.value.dob || !localFormData.value.classId) {
-      alert('Vui lòng điền đầy đủ các trường bắt buộc.');
-      return;
+  // Theo dõi prop studentToEdit, nếu có thì điền dữ liệu vào form
+  watchEffect(() => {
+    if (props.studentToEdit) {
+      form.value = { ...props.studentToEdit };
+    } else {
+      // Reset form
+      form.value = { id: null, name: '', dob: '', classId: null };
     }
-    emit('save', localFormData.value);
-  };
+  });
+
+  function handleSubmit() {
+    emit('save', { ...form.value });
+  }
 </script>
-
-<style scoped>
-  .form-container h2 {
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-    margin-top: 0;
-  }
-
-  .form-group {
-    margin-bottom: 15px;
-  }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: bold;
-    }
-
-    .form-group input,
-    .form-group select {
-      width: 100%;
-      padding: 10px;
-      box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-
-  .form-actions {
-    margin-top: 25px;
-  }
-
-    .form-actions button:first-child {
-      margin-right: 10px;
-    }
-</style>

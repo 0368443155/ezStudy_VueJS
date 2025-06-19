@@ -1,27 +1,21 @@
+<!-- src/components/StudentList.vue -->
 <template>
   <div>
-    <div class="actions-bar">
-      <div class="filter-group">
-        <select :value="currentFilter" @change="onFilterChange">
-          <option :value="null">--- Lớp ---</option>
-          <option v-for="c in classes" :key="c.id" :value="c.id">
-            {{ c.name }}
-          </option>
-        </select>
-        <input type="text"
-               v-model="searchName"
-               placeholder="Tìm theo tên..."
-               class="search-input" />
-        <input type="number"
-               v-model.number="searchAge"
-               placeholder="Tìm theo tuổi..."
-               class="search-input" />
-        <button @click="clearFilters" class="btn-clear">Xóa bộ lọc</button>
-      </div>
+    <div class="toolbar">
+      <h2>Danh sách Học sinh</h2>
       <button @click="$emit('add')">Thêm học sinh</button>
     </div>
+    <div class="form-group" style="max-width: 300px;">
+      <label>Lọc theo lớp:</label>
+      <select v-model="selectedClass">
+        <option :value="null">--- Tất cả các lớp ---</option>
+        <option v-for="c in classes" :key="c.id" :value="c.id">
+          {{ c.name }}
+        </option>
+      </select>
+      <a v-if="selectedClass" @click="selectedClass = null" style="cursor:pointer; color: red; margin-left: 10px;">Xóa bộ lọc</a>
+    </div>
 
-    <!-- Bảng dữ liệu -->
     <table>
       <thead>
         <tr>
@@ -29,228 +23,100 @@
           <th>Họ và tên</th>
           <th>Tuổi</th>
           <th>Lớp</th>
-          <th>Thao tác</th>
+          <th style="width: 150px;">Thao tác</th>
         </tr>
       </thead>
       <tbody>
-        <!--lặp qua danh sách học sinh trong từng phân trang-->
+        <tr v-if="paginatedStudents.length === 0">
+          <td colspan="5" style="text-align: center;">Không có dữ liệu học sinh phù hợp.</td>
+        </tr>
+        <!-- Thay đổi: lặp qua paginatedStudents thay vì filteredStudents -->
         <tr v-for="(student, index) in paginatedStudents" :key="student.id">
+          <!-- Thay đổi: tính toán chỉ số # dựa trên trang hiện tại -->
           <td>{{ (currentPage - 1) * itemsPerPage + index + 1 }}</td>
           <td>{{ student.name }}</td>
           <td>{{ tinhTuoi(student.dob) }}</td>
           <td>{{ getClassName(student.classId) }}</td>
-          <td>
-            <a @click="$emit('edit', student)" class="action-link">Sửa</a>
-            <a @click="$emit('delete', student.id)" class="action-link delete">Xóa</a>
+          <td class="actions">
+            <a @click="$emit('edit', student)">Sửa</a>
+            <a @click="$emit('delete', student.id)">Xóa</a>
           </td>
-        </tr>
-        <!-- THAY ĐỔI: Điều kiện kiểm tra `filteredStudents` vì có thể có kết quả nhưng không hiển thị trên trang hiện tại -->
-        <tr v-if="!filteredStudents.length">
-          <td colspan="5" style="text-align: center;">Không có dữ liệu học sinh phù hợp.</td>
         </tr>
       </tbody>
     </table>
 
-    <!-- MỚI: Thêm thanh điều khiển phân trang -->
-    <div v-if="totalPages > 1" class="pagination-controls">
-      <button @click="prevPage" :disabled="currentPage === 1">
-        « Trước
-      </button>
-      <span class="page-info">Trang {{ currentPage }} / {{ totalPages }}</span>
-      <button @click="nextPage" :disabled="currentPage === totalPages">
-        Sau »
-      </button>
-    </div>
-
+    <!-- Thêm component Pagination -->
+    <Pagination :currentPage="currentPage"
+                :totalPages="totalPages"
+                @page-changed="onPageChange" />
   </div>
 </template>
 
 <script setup>
-// theo dõi thay đổi của bộ lọc
-import { ref, computed, watch } from 'vue';
+  import { ref, computed, watch } from 'vue';
+  import Pagination from './Pagination.vue'; // <-- Import component mới
 
-const props = defineProps({
-  students: { type: Array, required: true },
-  classes: { type: Array, required: true },
-  currentFilter: { type: [Number, String], default: null }
-});
+  const props = defineProps({
+    students: Array,
+    classes: Array
+  });
 
-const emit = defineEmits(['add', 'edit', 'delete', 'filter-changed']);
+  defineEmits(['add', 'edit', 'delete']);
 
-// trạng thái cho tìm kiếm theo tên và tuổi
-const searchName = ref('');
-const searchAge = ref(null);
+  // --- Thêm state cho phân trang ---
+  const currentPage = ref(1);
+  const itemsPerPage = ref(5); // Hiển thị 5 học sinh mỗi trang
 
-// đặt trạng thái cho các phân trang
-const currentPage = ref(1);
-const itemsPerPage = ref(5); 
+  const selectedClass = ref(null);
 
-// danh sách học sinh sau khi lọc/tìm kiếm
-const filteredStudents = computed(() => {
-  let studentsToFilter = props.students;
+  const filteredStudents = computed(() => {
+    if (!selectedClass.value) {
+      return props.students;
+    }
+    return props.students.filter(s => s.classId === selectedClass.value);
+  });
 
-  if (props.currentFilter) {
-    studentsToFilter = studentsToFilter.filter(s => s.classId === props.currentFilter);
+  // --- Thêm các computed property cho phân trang ---
+  const totalPages = computed(() => {
+    return Math.ceil(filteredStudents.value.length / itemsPerPage.value);
+  });
+
+  const paginatedStudents = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage.value;
+    const end = start + itemsPerPage.value;
+    return filteredStudents.value.slice(start, end);
+  });
+
+  // --- Thêm hàm xử lý sự kiện từ Pagination component ---
+  function onPageChange(page) {
+    currentPage.value = page;
   }
-  if (searchName.value) {
-    studentsToFilter = studentsToFilter.filter(s =>
-      s.name.toLowerCase().includes(searchName.value.toLowerCase())
-    );
-  }
-  if (searchAge.value !== null && searchAge.value > 0) {
-    studentsToFilter = studentsToFilter.filter(s =>
-      tinhTuoi(s.dob) === searchAge.value
-    );
-  }
-  return studentsToFilter;
-});
 
-// tính tổng số trang
-const totalPages = computed(() => {
-  return Math.ceil(filteredStudents.value.length / itemsPerPage.value);
-});
-
-// lấy danh sách học sinh cho trang hiện tại
-const paginatedStudents = computed(() => {
-  const startIndex = (currentPage.value - 1) * itemsPerPage.value;
-  const endIndex = startIndex + itemsPerPage.value;
-  return filteredStudents.value.slice(startIndex, endIndex);
-});
-
-// mỗi khi bộ lọc thay đổi thì reset về trang 1
-watch(filteredStudents, () => {
+  // Watcher: Nếu người dùng lọc danh sách, quay về trang 1
+  watch(selectedClass, () => {
     currentPage.value = 1;
-});
+  });
+  watch(() => props.students, () => {
+    if (currentPage.value > totalPages.value && totalPages.value > 0) {
+      currentPage.value = totalPages.value;
+    }
+  });
 
-// khi filter thay đổi
-const onFilterChange = (event) => {
-  const value = event.target.value;
-  emit('filter-changed', value === 'null' ? null : Number(value));
-};
 
-//khi clear
-const clearFilters = () => {
-  searchName.value = '';
-  searchAge.value = null;
-  emit('filter-changed', null);
-};
-
-// hàm cho nút trang tiếp theo
-const nextPage = () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++;
-  }
-};
-//trang trước
-const prevPage = () => {
-  if (currentPage.value > 1) {
-    currentPage.value--;
-  }
-};
-
-//hàm lấy tên lớp theo id
-const getClassName = (classId) => {
-  const cls = props.classes.find(c => c.id === classId);
-  return cls ? cls.name : 'Chưa có lớp';
-};
-
-//hàm tính tuổi
-  const tinhTuoi = (dob) => {
-  if (!dob) return 'N/A';
-  const birthDate = new Date(dob);
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
+  function tinhTuoi(dob) {
+    if (!dob) return 'N/A';
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
     const m = today.getMonth() - birthDate.getMonth();
-  //kiểm tra xem ngày sinh với ngày hiện tại
-  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
   }
-  return age;
-};
+
+  function getClassName(classId) {
+    const lop = props.classes.find(c => c.id === classId);
+    return lop ? lop.name : 'Chưa xếp lớp';
+  }
 </script>
-
-<style scoped>
-  .pagination-controls {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 20px;
-  }
-
-    .pagination-controls button {
-      margin: 0 10px;
-      padding: 8px 16px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-      .pagination-controls button:disabled {
-        background-color: #ccc;
-        cursor: not-allowed;
-      }
-
-  .page-info {
-    font-weight: bold;
-  }
-  .search-input {
-    margin-left: 10px;
-    padding: 8px 12px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-  }
-
-  .btn-clear {
-    margin-left: 10px;
-    background-color: #6c757d;
-  }
-
-  .actions-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-
-  .filter-group {
-    display: flex;
-    align-items: center;
-  }
-
-    .filter-group select {
-      padding: 8px 12px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-      min-width: 200px;
-    }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  th, td {
-    border: 1px solid #ddd;
-    padding: 12px;
-    text-align: left;
-    vertical-align: middle;
-  }
-
-  th {
-    background-color: #f8f9fa;
-    font-weight: bold;
-  }
-
-  .action-link {
-    margin-right: 10px;
-    color: #007bff;
-    cursor: pointer;
-    text-decoration: underline;
-  }
-
-    .action-link.delete {
-      color: #dc3545;
-    }
-</style>

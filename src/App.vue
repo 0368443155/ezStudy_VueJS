@@ -1,152 +1,93 @@
-<script setup>
-  import { ref, computed, onMounted } from 'vue';
-  import AppHeader from './components/AppHeader.vue';
-  import StudentList from './components/StudentList.vue';
-  import StudentForm from './components/StudentForm.vue';
-
-  // trạng thái của ứng dụng
-  const danhSachHocSinh = ref([]);
-  const danhSachLopHoc = ref([]);
-  const currentView = ref('list'); // 'list' hoặc 'form'
-  const filterClassId = ref(null);
-  const isEditMode = ref(false);
-  const formData = ref({
-    id: null,
-    name: '',
-    dob: '',
-    classId: null,
-  });
-
-  //
-  const filteredStudents = computed(() => {
-    if (!filterClassId.value) {
-      return danhSachHocSinh.value;
-    }
-    return danhSachHocSinh.value.filter(s => s.classId == filterClassId.value);
-  });
-
-  // các methods, 
-
-  // localstorage
-  const saveDataToStorage = () => {
-    localStorage.setItem('ezstudy_danhSachHocSinh', JSON.stringify(danhSachHocSinh.value));
-    localStorage.setItem('ezstudy_danhSachLopHoc', JSON.stringify(danhSachLopHoc.value));
-  };
-
-  const loadDataFromStorage = () => {
-    const hocSinhData = localStorage.getItem('ezstudy_danhSachHocSinh');
-    const lopHocData = localStorage.getItem('ezstudy_danhSachLopHoc');
-    if (hocSinhData) danhSachHocSinh.value = JSON.parse(hocSinhData);
-    if (lopHocData) danhSachLopHoc.value = JSON.parse(lopHocData);
-  };
-
-  // khởi tạo dữ liệu mẫu
-  const initData = () => {
-    loadDataFromStorage();
-    if (danhSachLopHoc.value.length === 0) {
-      danhSachLopHoc.value = [
-        { id: 11, name: 'Lớp 11B' },
-        { id: 12, name: 'Lớp 12A' },
-      ];
-    }
-    if (danhSachHocSinh.value.length === 0) {
-      danhSachHocSinh.value = [
-        { id: 1, name: 'Đỗ An', dob: '2009-05-10', classId: 11 },
-        { id: 2, name: 'Nguyễn Ngọc', dob: '2008-11-20', classId: 12 },
-      ];
-    }
-    saveDataToStorage();
-  };
-
-  // routing
-  const resetForm = () => {
-    formData.value = { id: null, name: '', dob: '', classId: null };
-  };
-
-  const showListView = () => {
-    currentView.value = 'list';
-  };
-
-  const showAddForm = () => {
-    isEditMode.value = false;
-    resetForm();
-    currentView.value = 'form';
-  };
-
-  const showEditForm = (student) => {
-    isEditMode.value = true;
-    formData.value = { ...student };
-    currentView.value = 'form';
-  };
-
-  // xử lý lưu hoặc sửa
-  const handleSave = (studentData) => {
-    if (isEditMode.value) {
-      const index = danhSachHocSinh.value.findIndex(s => s.id === studentData.id);
-      if (index !== -1) {
-        danhSachHocSinh.value[index] = studentData;
-      }
-    } else {
-      danhSachHocSinh.value.push({ ...studentData, id: Date.now() });
-    }
-    saveDataToStorage();
-    showListView();
-  };
-
-  const handleDelete = (studentId) => {
-    if (confirm('Bạn có chắc chắn muốn xóa học sinh này?')) {
-      danhSachHocSinh.value = danhSachHocSinh.value.filter(s => s.id !== studentId);
-      saveDataToStorage();
-    }
-  };
-
-  // xử lý sự kiện thay đổi tìm kiếm bằng lớp
-  const handleFilterChange = (classId) => {
-    filterClassId.value = classId;
-  };
-
-  // tạo data mẫu khi chạy chương trình
-  onMounted(() => {
-    initData();
-  });
-</script>
-
+<!-- src/App.vue -->
 <template>
-  <div id="app-container">
-    <AppHeader />
-
-    <main>
-      <StudentList v-if="currentView === 'list'"
-                   :students="filteredStudents"
-                   :classes="danhSachLopHoc"
-                   :current-filter="filterClassId"
-                   @add="showAddForm"
-                   @edit="showEditForm"
-                   @delete="handleDelete"
-                   @filter-changed="handleFilterChange" />
-
-      <StudentForm v-else-if="currentView === 'form'"
-                   :initial-form-data="formData"
-                   :is-edit-mode="isEditMode"
-                   :classes="danhSachLopHoc"
-                   @save="handleSave"
-                   @cancel="showListView" />
+  <div class="container">
+    <AppHeader :currentView="currentView" @change-view="changeView" />
+    <main style="margin-top: 20px;">
+      <StudentManagement v-if="currentView === 'students'"
+                         :students="students"
+                         :classes="classes"
+                         @save-student="handleSaveStudent"
+                         @delete-student="handleDeleteStudent" />
+      <ClassManagement v-if="currentView === 'classes'"
+                       :classes="classes"
+                       @save-class="handleSaveClass"
+                       @delete-class="handleDeleteClass" />
     </main>
   </div>
 </template>
 
-<style>
-  /*style chính */
-  #app-container {
-    max-width: 1000px;
-    margin: 0 auto;
-    background-color: #fff;
-    padding: 20px 30px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
+<script setup>
+  import { ref } from 'vue';
+  import AppHeader from './components/AppHeader.vue';
+  import StudentManagement from './components/StudentManagement.vue';
+  import ClassManagement from './components/ClassManagement.vue';
+
+  // --- DỮ LIỆU MOCK ---
+  const classes = ref([
+    { id: 1, name: 'Khối 10', parentId: null },
+    { id: 2, name: 'Lớp 10A1', parentId: 1 },
+    { id: 3, name: 'Lớp 10A2', parentId: 1 },
+    { id: 4, name: 'Khối 11', parentId: null },
+    { id: 5, name: 'Lớp 11B1', parentId: 4 },
+    { id: 6, name: 'Lớp 11B2', parentId: 4 },
+    { id: 7, name: 'Khối 12', parentId: null },
+    { id: 8, name: 'Lớp 12C1', parentId: 7 },
+  ]);
+
+  const students = ref([
+    { id: 101, name: 'Nguyễn Văn A', dob: '2008-05-10', classId: 2 },
+    { id: 102, name: 'Trần Thị B', dob: '2008-09-15', classId: 2 },
+    { id: 103, name: 'Lê Văn C', dob: '2007-01-20', classId: 5 },
+    { id: 104, name: 'Phạm Thị D', dob: '2006-03-30', classId: 8 },
+  ]);
+  // --- KẾT THÚC DỮ LIỆU MOCK ---
+
+  const currentView = ref('students'); // 'students' hoặc 'classes'
+
+  function changeView(view) {
+    currentView.value = view;
   }
 
-  main {
-    margin-top: 25px;
+  // --- LOGIC QUẢN LÝ LỚP ---
+  function handleSaveClass(classData) {
+    if (classData.id) { // Update
+      const index = classes.value.findIndex(c => c.id === classData.id);
+      if (index !== -1) {
+        classes.value[index] = classData;
+      }
+    } else { // Create
+      const newId = Math.max(0, ...classes.value.map(c => c.id)) + 1;
+      classes.value.push({ ...classData, id: newId });
+    }
   }
-</style>
+
+  function handleDeleteClass(classId) {
+    // Tìm các lớp con để xóa luôn
+    const childrenIds = classes.value.filter(c => c.parentId === classId).map(c => c.id);
+    const idsToDelete = [classId, ...childrenIds];
+
+    // Xóa lớp và các lớp con của nó
+    classes.value = classes.value.filter(c => !idsToDelete.includes(c.id));
+
+    // Xóa luôn học sinh thuộc các lớp đó
+    students.value = students.value.filter(s => !idsToDelete.includes(s.classId));
+  }
+
+
+  // --- LOGIC QUẢN LÝ HỌC SINH ---
+  function handleSaveStudent(studentData) {
+    if (studentData.id) { // Update
+      const index = students.value.findIndex(s => s.id === studentData.id);
+      if (index !== -1) {
+        students.value[index] = studentData;
+      }
+    } else { // Create
+      const newId = Math.max(100, ...students.value.map(s => s.id)) + 1;
+      students.value.push({ ...studentData, id: newId });
+    }
+  }
+
+  function handleDeleteStudent(studentId) {
+    students.value = students.value.filter(s => s.id !== studentId);
+  }
+</script>

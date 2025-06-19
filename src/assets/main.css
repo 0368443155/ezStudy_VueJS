@@ -1,9 +1,20 @@
+/* src/assets/main.css */
+
 body {
   font-family: Arial, sans-serif;
   background-color: #f4f4f4;
   margin: 0;
   padding: 20px;
   color: #333;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  background-color: #fff;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
 }
 
 /* style cho các nút */
@@ -19,6 +30,7 @@ button,
   text-decoration: none;
   display: inline-block;
   transition: opacity 0.2s;
+  margin-right: 8px;
 }
 
   button:hover,
@@ -28,4 +40,106 @@ button,
 
 .btn-secondary {
   background-color: #6c757d;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+}
+
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+/* Style cho Table */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+th {
+  background-color: #f2f2f2;
+}
+
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.actions a {
+  margin-right: 10px;
+  color: #007bff;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Style cho Form */
+.form-container {
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background: #f9f9f9;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+  .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+
+  .form-group input,
+  .form-group select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+
+.form-actions {
+  margin-top: 20px;
+}
+
+/* Navigation Header */
+.app-header nav {
+  background-color: #e9ecef;
+  padding: 10px;
+  border-bottom: 2px solid #007bff;
+}
+
+  .app-header nav span {
+    font-size: 24px;
+    font-weight: bold;
+    margin-right: 30px;
+  }
+
+.app-header .nav-link {
+  padding: 10px 15px;
+  text-decoration: none;
+  color: #007bff;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+  .app-header .nav-link.active {
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+  }
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
 }

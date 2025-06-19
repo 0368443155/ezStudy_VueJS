@@ -1,15 +1,28 @@
+<!-- src/components/AppHeader.vue -->
 <template>
-  <header>
-    <div class="logo">ezStudy</div>
+  <header class="app-header">
     <nav>
-      <a href="#" class="active">Học sinh</a>
-      <a href="#">Lớp</a>
+      <span>ezStudy</span>
+      <a class="nav-link"
+         :class="{ active: currentView === 'students' }"
+         @click="$emit('changeView', 'students')">
+        Học sinh
+      </a>
+      <a class="nav-link"
+         :class="{ active: currentView === 'classes' }"
+         @click="$emit('changeView', 'classes')">
+        Lớp
+      </a>
     </nav>
   </header>
 </template>
 
 <script setup>
-  
+  defineProps({
+    currentView: String
+  });
+
+  defineEmits(['changeView']);
 </script>
 
 <style scoped>
