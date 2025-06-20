@@ -1,7 +1,7 @@
 <template>
   <header class="app-header">
     <nav>
-      <span>ezStudy</span>
+      <span>Quản Lý Học Sinh</span>
       <a class="nav-link"
          :class="{ active: currentView === 'students' }"
          @click="$emit('changeView', 'students')">

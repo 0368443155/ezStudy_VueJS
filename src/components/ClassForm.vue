@@ -51,7 +51,7 @@ watchEffect(() => {
   if (props.classToEdit) {
     form.value = { ...props.classToEdit };
   } else {
-=    form.value = { id: null, name: '', parentId: null };
+    form.value = { id: null, name: '', parentId: null };
   }
 });
 
